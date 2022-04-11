@@ -1,0 +1,39 @@
+
+*** Running vivado
+    with args -log fsm.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source fsm.tcl
+
+
+****** Vivado v2018.2 (64-bit)
+  **** SW Build 2258646 on Thu Jun 14 20:02:38 MDT 2018
+  **** IP Build 2256618 on Thu Jun 14 22:10:49 MDT 2018
+    ** Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+
+source fsm.tcl -notrace
+Command: synth_design -top fsm -part xc7a35tcpg236-1
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7a35t'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7a35t'
+INFO: Launching helper process for spawning children vivado processes
+INFO: Helper process launched with PID 443059 
+---------------------------------------------------------------------------------
+Starting Synthesize : Time (s): cpu = 00:00:01 ; elapsed = 00:00:02 . Memory (MB): peak = 1225.906 ; gain = 61.875 ; free physical = 129 ; free virtual = 16197
+---------------------------------------------------------------------------------
+INFO: [Synth 8-638] synthesizing module 'fsm' [/home/ionut/vhdl-dragon-dice/project_1/project_1.srcs/sources_1/new/fsm.vhd:26]
+INFO: [Synth 8-3491] module 'driver7seg' declared at '/home/ionut/vhdl-dragon-dice/project_1/project_1.srcs/sources_1/imports/exemple/Project2 - WhackaMole/driver7seg.vhd:5' bound to instance 'u_ssd' of component 'driver7seg' [/home/ionut/vhdl-dragon-dice/project_1/project_1.srcs/sources_1/new/fsm.vhd:51]
+INFO: [Synth 8-638] synthesizing module 'driver7seg' [/home/ionut/vhdl-dragon-dice/project_1/project_1.srcs/sources_1/imports/exemple/Project2 - WhackaMole/driver7seg.vhd:15]
+INFO: [Synth 8-226] default block is never used [/home/ionut/vhdl-dragon-dice/project_1/project_1.srcs/sources_1/imports/exemple/Project2 - WhackaMole/driver7seg.vhd:57]
+INFO: [Synth 8-226] default block is never used [/home/ionut/vhdl-dragon-dice/project_1/project_1.srcs/sources_1/imports/exemple/Project2 - WhackaMole/driver7seg.vhd:70]
+INFO: [Synth 8-226] default block is never used [/home/ionut/vhdl-dragon-dice/project_1/project_1.srcs/sources_1/imports/exemple/Project2 - WhackaMole/driver7seg.vhd:88]
+INFO: [Synth 8-256] done synthesizing module 'driver7seg' (1#1) [/home/ionut/vhdl-dragon-dice/project_1/project_1.srcs/sources_1/imports/exemple/Project2 - WhackaMole/driver7seg.vhd:15]
+WARNING: [Synth 8-614] signal 'currentDice' is read in the process but is not in the sensitivity list [/home/ionut/vhdl-dragon-dice/project_1/project_1.srcs/sources_1/new/fsm.vhd:68]
+ERROR: [Synth 8-690] width mismatch in assignment; target has 3 bits, source has 4 bits [/home/ionut/vhdl-dragon-dice/project_1/project_1.srcs/sources_1/new/fsm.vhd:89]
+ERROR: [Synth 8-285] failed synthesizing module 'fsm' [/home/ionut/vhdl-dragon-dice/project_1/project_1.srcs/sources_1/new/fsm.vhd:26]
+---------------------------------------------------------------------------------
+Finished Synthesize : Time (s): cpu = 00:00:02 ; elapsed = 00:00:02 . Memory (MB): peak = 1270.531 ; gain = 106.500 ; free physical = 182 ; free virtual = 16210
+---------------------------------------------------------------------------------
+synthesize failed
+INFO: [Common 17-83] Releasing license: Synthesis
+9 Infos, 1 Warnings, 0 Critical Warnings and 3 Errors encountered.
+synth_design failed
+ERROR: [Common 17-69] Command failed: Vivado Synthesis failed
+INFO: [Common 17-206] Exiting Vivado at Mon Apr 11 19:40:43 2022...
