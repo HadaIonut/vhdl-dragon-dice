@@ -16,7 +16,7 @@ entity fsm is
            rst : in STD_LOGIC;
            sw : in STD_LOGIC_VECTOR (15 downto 0);
            btnC : in std_logic;
-           led : out STD_LOGIC_VECTOR (15 downto 0);
+--           led : out STD_LOGIC_VECTOR (15 downto 0);
            an : out std_logic_vector (3 downto 0);
            seg : out std_logic_vector (0 to 6);
            dp : out STD_LOGIC
@@ -28,7 +28,7 @@ architecture Behavioral of fsm is
 type int_array is array(0 to 3) of integer;
 signal rnd : STD_LOGIC_VECTOR (2 downto 0);
 signal diceValues:  int_array;
-signal currentDice: integer;
+signal currentDice: integer := 0;
 
 type states is (start, get_rnd, show);
 signal current_state, next_state : states;
@@ -69,7 +69,6 @@ process (current_state)
 begin
   case current_state is
     when start => next_state <= get_rnd;
-                  currentDice <= 0;
     when get_rnd => if currentDice < 4 then
                         next_state <= get_rnd;
                     else
@@ -86,7 +85,7 @@ variable firstbit : std_logic;
 begin
   if rst = '1' then
     shiftreg := x"ABCD";
-    rnd <= x"D";
+    rnd <= "000";
   elsif rising_edge(clk) then
     firstbit := shiftreg(1) xnor  shiftreg(0);
     shiftreg := firstbit & shiftreg(15 downto 1);
@@ -98,6 +97,7 @@ generate_i: process (clk, rst)
 begin
   if rst = '1' then
      diceValues(currentDice) <= 0;
+     currentDice <= 0;
   elsif rising_edge(clk) then
      if current_state = get_rnd then
         diceValues(currentDice) <= to_integer(unsigned(rnd)) + 1;
