@@ -2,8 +2,8 @@
 # Vivado v2018.2 (64-bit)
 # SW Build 2258646 on Thu Jun 14 20:02:38 MDT 2018
 # IP Build 2256618 on Thu Jun 14 22:10:49 MDT 2018
-# Start of session at: Mon May  2 18:43:50 2022
-# Process ID: 299514
+# Start of session at: Mon May  2 19:25:24 2022
+# Process ID: 313037
 # Current directory: /home/ionut/vhdl-dragon-dice/project_1/project_1.runs/synth_1
 # Command line: vivado -log fsm.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source fsm.tcl
 # Log file: /home/ionut/vhdl-dragon-dice/project_1/project_1.runs/synth_1/fsm.vds

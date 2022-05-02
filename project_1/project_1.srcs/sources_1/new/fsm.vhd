@@ -30,11 +30,11 @@ signal rnd : STD_LOGIC_VECTOR (2 downto 0);
 signal diceValues:  int_array;
 signal currentDice: integer := 0;
 
-type states is (start, get_rnd, show);
+type states is (start, get_rnd, show, user_select, reroll);
 signal current_state, next_state : states;
 signal Din : STD_LOGIC_VECTOR (15 downto 0); 
 signal dp_in : STD_LOGIC_VECTOR (3 downto 0);
-
+signal selectIsOk : STD_LOGIC := '0';
 
 component driver7seg is
     Port ( clk : in STD_LOGIC; --100MHz board clock input
@@ -65,7 +65,7 @@ begin
   end if;    
 end process;
         
-process (current_state)
+process (current_state, currentDice)
 begin
   case current_state is
     when start => next_state <= get_rnd;
@@ -74,6 +74,10 @@ begin
                     else
                         next_state <= show;
                     end if;
+    when show => next_state <= user_select;
+    when user_select => if (btnC = '1') and (selectIsOk = '1') then 
+                           next_state <= reroll;
+                        end if;
     when others => next_state <= start;
   end case;                                            
 end process;
@@ -99,7 +103,7 @@ begin
      diceValues(currentDice) <= 0;
      currentDice <= 0;
   elsif rising_edge(clk) then
-     if current_state = get_rnd then
+     if (current_state = get_rnd) and (currentDice < 4) then
         diceValues(currentDice) <= to_integer(unsigned(rnd)) + 1;
         currentDice <= currentDice + 1;
      end if;
@@ -114,6 +118,16 @@ begin
                std_logic_vector(to_unsigned(diceValues(2), 4)) &
                std_logic_vector(to_unsigned(diceValues(3), 4));
     end if;
+end process;
+
+
+get_user_input: process (clk, rst)
+begin
+
+    if current_state = user_select then
+        selectIsOk <= '1';
+    end if;
+
 end process;
 
 end Behavioral;
