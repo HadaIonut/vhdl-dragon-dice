@@ -33,12 +33,17 @@ signal goToScoreCalculation: std_logic := '0';
 signal rerollTarget: integer := 0;
 signal rerollCurrent: integer := 0;
 signal currentDice: integer := 0;
+signal userDiceSum: int_array;
+signal userScores: int_array := (0,0,0,0);
+signal userId: integer := 0;
+signal player_change: std_logic := '0';
 
-type states is (start, get_rnd, show, user_select, reroll, score_calculation);
+type states is (start, get_rnd, show, user_select, reroll, dice_value_calculation ,score_calculation);
 signal current_state, next_state : states;
 signal Din : STD_LOGIC_VECTOR (15 downto 0); 
 signal dp_in : STD_LOGIC_VECTOR (3 downto 0);
 signal selectIsOk : STD_LOGIC := '0';
+signal test: std_logic;
 
 component driver7seg is
     Port ( clk : in STD_LOGIC; --100MHz board clock input
@@ -69,15 +74,18 @@ begin
   end if;    
 end process;
         
-process (current_state, currentDice, btnC, rerollCurrent)
+process (current_state, currentDice, btnC, rerollCurrent, test)
 variable swSum: integer;
 variable localRerollTarget: integer;
 variable localDiceToReroll: int_array;
+
 begin
   swSum := 0;
   localRerollTarget := 0;
   case current_state is
-    when start => next_state <= get_rnd;
+    when start => 
+        player_change <= '0';
+        next_state <= get_rnd;
     when get_rnd => if currentDice < 4 then
                         next_state <= get_rnd;
                     else
@@ -87,7 +95,8 @@ begin
         if goToScoreCalculation = '0' then
             next_state <= user_select;
         else
-            next_state <= score_calculation;
+            test <= '1';
+            next_state <= dice_value_calculation;
         end if;
     when user_select =>
         if sw(15) = '1' then
@@ -129,6 +138,17 @@ begin
                         goToScoreCalculation <= '1';
                         next_state <= show;
                    end if;
+    when dice_value_calculation => 
+        userDiceSum(userId) <= diceValues(0) + diceValues(1) + diceValues(2) + diceValues(3); 
+        if userId < 3 then
+            userId <= userId + 1;
+            next_state <= start;
+            rerollTarget <= 0;
+            
+            player_change <= '1';
+        else
+            next_state <= score_calculation;
+        end if;
     when others => next_state <= start;
   end case;                                            
 end process;
@@ -148,11 +168,15 @@ begin
   end if;
 end process;
 
-generate_i: process (clk, rst)
+generate_i: process (clk, rst, player_change)
 begin
+
   if rst = '1' then
      diceValues(currentDice) <= 0;
      currentDice <= 0;
+  elsif player_change = '1' then
+    currentDice <= 0;
+    rerollCurrent <= 0;
   elsif rising_edge(clk) then
      if (current_state = get_rnd) and (currentDice < 4) then
         diceValues(currentDice) <= to_integer(unsigned(rnd)) + 1;
