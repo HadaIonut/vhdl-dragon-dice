@@ -28,9 +28,13 @@ architecture Behavioral of fsm is
 type int_array is array(0 to 3) of integer;
 signal rnd : STD_LOGIC_VECTOR (2 downto 0);
 signal diceValues:  int_array;
+signal diceToReroll: int_array;
+signal goToScoreCalculation: std_logic := '0';
+signal rerollTarget: integer := 0;
+signal rerollCurrent: integer := 0;
 signal currentDice: integer := 0;
 
-type states is (start, get_rnd, show, user_select, reroll);
+type states is (start, get_rnd, show, user_select, reroll, score_calculation);
 signal current_state, next_state : states;
 signal Din : STD_LOGIC_VECTOR (15 downto 0); 
 signal dp_in : STD_LOGIC_VECTOR (3 downto 0);
@@ -65,8 +69,13 @@ begin
   end if;    
 end process;
         
-process (current_state, currentDice)
+process (current_state, currentDice, btnC, rerollCurrent)
+variable swSum: integer;
+variable localRerollTarget: integer;
+variable localDiceToReroll: int_array;
 begin
+  swSum := 0;
+  localRerollTarget := 0;
   case current_state is
     when start => next_state <= get_rnd;
     when get_rnd => if currentDice < 4 then
@@ -74,10 +83,52 @@ begin
                     else
                         next_state <= show;
                     end if;
-    when show => next_state <= user_select;
-    when user_select => if (btnC = '1') and (selectIsOk = '1') then 
-                           next_state <= reroll;
-                        end if;
+    when show => 
+        if goToScoreCalculation = '0' then
+            next_state <= user_select;
+        else
+            next_state <= score_calculation;
+        end if;
+    when user_select =>
+        if sw(15) = '1' then
+            swSum := swSum + 1;
+        end if;
+        if sw(14) = '1' then
+            swSum := swSum + 1;
+        end if;
+        if sw(13) = '1' then
+            swSum := swSum + 1;
+        end if;
+        if sw(12) = '1' then
+            swSum := swSum + 1;
+        end if;
+        if (btnC = '1') and (swSum < 3) then 
+            if sw(15) = '1' then
+                localDiceToReroll(localRerollTarget) := 0;
+                localRerollTarget := localRerollTarget + 1;
+            end if;
+            if sw(14) = '1' then
+                localDiceToReroll(localRerollTarget) := 1;
+                localRerollTarget := localRerollTarget + 1;
+            end if;
+            if sw(13) = '1' then
+                localDiceToReroll(localRerollTarget) := 2;
+                localRerollTarget := localRerollTarget + 1;
+            end if;
+            if sw(12) = '1' then
+                localDiceToReroll(localRerollTarget) := 3;
+                localRerollTarget := localRerollTarget + 1;
+            end if;
+            rerollTarget <= localRerollTarget;
+            diceToReroll <= localDiceToReroll;
+            next_state <= reroll;
+        end if;
+    when reroll => if rerollCurrent < rerollTarget then 
+                        next_state <= reroll;
+                   else 
+                        goToScoreCalculation <= '1';
+                        next_state <= show;
+                   end if;
     when others => next_state <= start;
   end case;                                            
 end process;
@@ -106,6 +157,9 @@ begin
      if (current_state = get_rnd) and (currentDice < 4) then
         diceValues(currentDice) <= to_integer(unsigned(rnd)) + 1;
         currentDice <= currentDice + 1;
+     elsif current_state = reroll and rerollCurrent < rerollTarget then
+        diceValues(diceToReroll(rerollCurrent)) <= to_integer(unsigned(rnd)) + 1;
+        rerollCurrent <= rerollCurrent + 1;
      end if;
   end if;
 end process;
@@ -118,16 +172,6 @@ begin
                std_logic_vector(to_unsigned(diceValues(2), 4)) &
                std_logic_vector(to_unsigned(diceValues(3), 4));
     end if;
-end process;
-
-
-get_user_input: process (clk, rst)
-begin
-
-    if current_state = user_select then
-        selectIsOk <= '1';
-    end if;
-
 end process;
 
 end Behavioral;
