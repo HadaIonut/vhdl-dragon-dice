@@ -29,16 +29,15 @@ type int_array is array(0 to 3) of integer;
 signal rnd : STD_LOGIC_VECTOR (2 downto 0);
 signal diceValues:  int_array;
 signal diceToReroll: int_array;
-signal goToScoreCalculation: std_logic := '0';
 signal rerollTarget: integer := 0;
 signal rerollCurrent: integer := 0;
 signal currentDice: integer := 0;
 signal userDiceSum: int_array;
 signal userScores: int_array := (0,0,0,0);
-signal userId: integer := 0;
 signal player_change: std_logic := '0';
-
-type states is (start, get_rnd, show, user_select, reroll, dice_value_calculation ,score_calculation);
+signal debug_userId: integer := 0;
+signal userId: integer := 0;
+type states is (start, get_rnd, show, user_select, reroll, dice_value_calculation ,score_calculation, show_score);
 signal current_state, next_state : states;
 signal Din : STD_LOGIC_VECTOR (15 downto 0); 
 signal dp_in : STD_LOGIC_VECTOR (3 downto 0);
@@ -74,10 +73,11 @@ begin
   end if;    
 end process;
         
-process (current_state, currentDice, btnC, rerollCurrent, test)
+process (current_state, currentDice, btnC, rerollCurrent)
 variable swSum: integer;
 variable localRerollTarget: integer;
 variable localDiceToReroll: int_array;
+variable goToScoreCalculation: std_logic;
 
 begin
   swSum := 0;
@@ -85,7 +85,9 @@ begin
   case current_state is
     when start => 
         player_change <= '0';
+        debug_userId <= userId;
         next_state <= get_rnd;
+        goToScoreCalculation := '0';
     when get_rnd => if currentDice < 4 then
                         next_state <= get_rnd;
                     else
@@ -95,7 +97,6 @@ begin
         if goToScoreCalculation = '0' then
             next_state <= user_select;
         else
-            test <= '1';
             next_state <= dice_value_calculation;
         end if;
     when user_select =>
@@ -135,19 +136,29 @@ begin
     when reroll => if rerollCurrent < rerollTarget then 
                         next_state <= reroll;
                    else 
-                        goToScoreCalculation <= '1';
+                        goToScoreCalculation := '1';
                         next_state <= show;
                    end if;
     when dice_value_calculation => 
-        userDiceSum(userId) <= diceValues(0) + diceValues(1) + diceValues(2) + diceValues(3); 
-        if userId < 3 then
-            userId <= userId + 1;
-            next_state <= start;
-            rerollTarget <= 0;
+        if rising_edge(clk) then 
+            userDiceSum(userId) <= diceValues(0) + diceValues(1) + diceValues(2) + diceValues(3); 
+            goToScoreCalculation := '0';
+            if userId < 3 then
+                userId <= userId + 1;
+                rerollTarget <= 0;
             
-            player_change <= '1';
-        else
-            next_state <= score_calculation;
+                player_change <= '1';
+                next_state <= start;
+            else
+                next_state <= score_calculation;
+            end if;
+        end if;
+    when score_calculation => 
+        userId <= 0;
+        next_state <= show_score;
+    when show_score => 
+        if btnC = '1' then
+            next_state <= start;
         end if;
     when others => next_state <= start;
   end case;                                            
@@ -195,7 +206,30 @@ begin
                std_logic_vector(to_unsigned(diceValues(1), 4)) &
                std_logic_vector(to_unsigned(diceValues(2), 4)) &
                std_logic_vector(to_unsigned(diceValues(3), 4));
+    elsif current_state = show_score then
+        Din <= std_logic_vector(to_unsigned(userScores(0), 4)) & 
+               std_logic_vector(to_unsigned(userScores(1), 4)) &
+               std_logic_vector(to_unsigned(userScores(2), 4)) &
+               std_logic_vector(to_unsigned(userScores(3), 4));
     end if;
+end process;
+
+calculate_score: process(clk, rst)
+variable maxValue: integer;
+variable maxIndex: integer;
+begin
+    maxValue := 0;
+    maxIndex := 0;
+    if current_state = score_calculation and rising_edge(clk) then
+        for index in 0 to 3 loop
+            if userDiceSum(index) > maxValue then
+                maxValue := userDiceSum(index);
+                maxIndex := index;
+            end if;
+        end loop;
+        userScores(maxIndex) <= userScores(maxIndex) + 1;
+     end if;
+        
 end process;
 
 end Behavioral;
