@@ -80,21 +80,26 @@ begin
   localRerollTarget := 0;
   case current_state is
     when start => 
+        -- init values
         player_change <= '0';
         next_state <= get_rnd;
         goToScoreCalculation := '0';
-    when get_rnd => if currentDice < 4 then
-                        next_state <= get_rnd;
-                    else
-                        next_state <= show;
-                    end if;
+    when get_rnd => 
+        -- keep state in get_rnd until 4 dice are generated
+        if currentDice < 4 then
+            next_state <= get_rnd;
+        else
+            next_state <= show;
+        end if;
     when show => 
+        -- after reroll results are shown go to sum calculation
         if goToScoreCalculation = '0' then
             next_state <= user_select;
         else
             next_state <= dice_value_calculation;
         end if;
     when user_select =>
+        -- sum active swiches (reroll values)
         if sw(15) = '1' then
             swSum := swSum + 1;
         end if;
@@ -107,6 +112,7 @@ begin
         if sw(12) = '1' then
             swSum := swSum + 1;
         end if;
+        -- if select button is pressed and the number of selected values are correct select values to reroll
         if (btnC = '1') and (swSum < 3) then 
             if sw(15) = '1' then
                 localDiceToReroll(localRerollTarget) := 0;
@@ -124,20 +130,26 @@ begin
                 localDiceToReroll(localRerollTarget) := 3;
                 localRerollTarget := localRerollTarget + 1;
             end if;
+            -- update global signal from local and go to reroll state 
             rerollTarget <= localRerollTarget;
             diceToReroll <= localDiceToReroll;
             next_state <= reroll;
         end if;
-    when reroll => if rerollCurrent < rerollTarget then 
-                        next_state <= reroll;
-                   else 
-                        goToScoreCalculation := '1';
-                        next_state <= show;
-                   end if;
+    when reroll => 
+        -- stay on reroll if the number of rerolled dice isn't correct
+        if rerollCurrent < rerollTarget then 
+            next_state <= reroll;
+        else 
+            goToScoreCalculation := '1';
+            next_state <= show;
+        end if;
     when dice_value_calculation => 
         if rising_edge(clk) then 
+            -- sum dice for the current player
             userDiceSum(userId) <= diceValues(0) + diceValues(1) + diceValues(2) + diceValues(3); 
             goToScoreCalculation := '0';
+            -- if the current player is the last one go to score calculation
+            -- else start the turn of the following player
             if userId < 3 then
                 userId <= userId + 1;
                 rerollTarget <= 0;
@@ -149,11 +161,15 @@ begin
             end if;
         end if;
     when score_calculation => 
+        -- reset user count
         userId <= 0;
         next_state <= show_score;
     when show_score => 
+        -- stay on show score until the accept button is pressed
         if btnC = '1' then
             next_state <= start;
+        else 
+            next_state <= show_score;
         end if;
     when others => next_state <= start;
   end case;                                            
@@ -181,6 +197,7 @@ begin
      diceValues(currentDice) <= 0;
      currentDice <= 0;
   elsif player_change = '1' then
+    -- if player change then reset counters (this happens here because of a limitation)
     currentDice <= 0;
     rerollCurrent <= 0;
   elsif rising_edge(clk) then
