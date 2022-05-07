@@ -16,7 +16,6 @@ entity fsm is
            rst : in STD_LOGIC;
            sw : in STD_LOGIC_VECTOR (15 downto 0);
            btnC : in std_logic;
---           led : out STD_LOGIC_VECTOR (15 downto 0);
            an : out std_logic_vector (3 downto 0);
            seg : out std_logic_vector (0 to 6);
            dp : out STD_LOGIC
@@ -35,14 +34,11 @@ signal currentDice: integer := 0;
 signal userDiceSum: int_array;
 signal userScores: int_array := (0,0,0,0);
 signal player_change: std_logic := '0';
-signal debug_userId: integer := 0;
 signal userId: integer := 0;
 type states is (start, get_rnd, show, user_select, reroll, dice_value_calculation ,score_calculation, show_score);
 signal current_state, next_state : states;
 signal Din : STD_LOGIC_VECTOR (15 downto 0); 
 signal dp_in : STD_LOGIC_VECTOR (3 downto 0);
-signal selectIsOk : STD_LOGIC := '0';
-signal test: std_logic;
 
 component driver7seg is
     Port ( clk : in STD_LOGIC; --100MHz board clock input
@@ -85,7 +81,6 @@ begin
   case current_state is
     when start => 
         player_change <= '0';
-        debug_userId <= userId;
         next_state <= get_rnd;
         goToScoreCalculation := '0';
     when get_rnd => if currentDice < 4 then
