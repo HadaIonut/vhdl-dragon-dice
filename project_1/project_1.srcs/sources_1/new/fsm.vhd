@@ -15,6 +15,7 @@ entity fsm is
     Port ( clk : in STD_LOGIC;
            rst : in STD_LOGIC;
            sw : in STD_LOGIC_VECTOR (15 downto 0);
+           led : out STD_LOGIC_VECTOR (15 downto 0);
            btnC : in std_logic;
            an : out std_logic_vector (3 downto 0);
            seg : out std_logic_vector (0 to 6);
@@ -38,7 +39,7 @@ signal userId: integer := 0;
 type states is (start, get_rnd, show, user_select, reroll, dice_value_calculation ,score_calculation, show_score);
 signal current_state, next_state : states;
 signal Din : STD_LOGIC_VECTOR (15 downto 0); 
-signal dp_in : STD_LOGIC_VECTOR (3 downto 0);
+signal dp_in : STD_LOGIC_VECTOR (3 downto 0) := "0000";
 
 component driver7seg is
     Port ( clk : in STD_LOGIC; --100MHz board clock input
@@ -83,6 +84,7 @@ begin
         -- init values
         player_change <= '0';
         next_state <= get_rnd;
+        led <= ('1','1','0','0','0','0','0','0','0','0','0','0','0','0','0','0');
         goToScoreCalculation := '0';
     when get_rnd => 
         -- keep state in get_rnd until 4 dice are generated
@@ -91,6 +93,7 @@ begin
         else
             next_state <= show;
         end if;
+        led <= ('1','1','1','1','0','0','0','0','0','0','0','0','0','0','0','0');
     when show => 
         -- after reroll results are shown go to sum calculation
         if goToScoreCalculation = '0' then
@@ -98,6 +101,7 @@ begin
         else
             next_state <= dice_value_calculation;
         end if;
+        led <= ('1','1','1','1','1','1','0','0','0','0','0','0','0','0','0','0');
     when user_select =>
         -- sum active swiches (reroll values)
         if sw(15) = '1' then
@@ -135,6 +139,7 @@ begin
             diceToReroll <= localDiceToReroll;
             next_state <= reroll;
         end if;
+        led <= ('1','1','1','1','1','1','1','1','0','0','0','0','0','0','0','0');
     when reroll => 
         -- stay on reroll if the number of rerolled dice isn't correct
         if rerollCurrent < rerollTarget then 
@@ -143,6 +148,7 @@ begin
             goToScoreCalculation := '1';
             next_state <= show;
         end if;
+        led <= ('1','1','1','1','1','1','1','1','1','1','0','0','0','0','0','0');
     when dice_value_calculation => 
         if rising_edge(clk) then 
             -- sum dice for the current player
@@ -160,10 +166,12 @@ begin
                 next_state <= score_calculation;
             end if;
         end if;
+        led <= ('1','1','1','1','1','1','1','1','1','1','1','1','0','0','0','0');
     when score_calculation => 
         -- reset user count
         userId <= 0;
         next_state <= show_score;
+        led <= ('1','1','1','1','1','1','1','1','1','1','1','1','1','1','0','0');
     when show_score => 
         -- stay on show score until the accept button is pressed
         if btnC = '1' then
@@ -171,6 +179,7 @@ begin
         else 
             next_state <= show_score;
         end if;
+        led <= ('1','1','1','1','1','1','1','1','1','1','1','1','1','1','1','1');
     when others => next_state <= start;
   end case;                                            
 end process;

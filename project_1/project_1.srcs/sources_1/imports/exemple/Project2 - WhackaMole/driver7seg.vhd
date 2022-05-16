@@ -16,14 +16,14 @@ architecture Behavioral of driver7seg is
 
 signal clk1kHz : STD_LOGIC;
 signal state : STD_LOGIC_VECTOR(23 downto 0);
-signal addr : STD_LOGIC_VECTOR(1 downto 0);
+signal addr : STD_LOGIC_VECTOR(1 downto 0) := "00";
 signal cseg : STD_LOGIC_VECTOR(3 downto 0);
 
 begin
 
--- frequency divider by 100k to generate 1kHz anode sweeping clock
--- counting from 0 to 99999, output is MSB 
--- 17 counter state length needed 
+---- frequency divider by 100k to generate 1kHz anode sweeping clock
+---- counting from 0 to 99999, output is MSB 
+---- 17 counter state length needed 
 div1kHz: process(clk, rst)
 begin
    if rst = '1' then 
